@@ -15,9 +15,14 @@
 /// spawned. It is intentionally infallible — on failure it logs and
 /// returns, leaving the existing (minimal) environment in place.
 pub fn inherit_login_shell_env() {
+    #[cfg(unix)]
     unix::inherit();
+
+    #[cfg(not(unix))]
+    {}
 }
 
+#[cfg(unix)]
 mod unix {
     use std::collections::HashMap;
     use std::process::Command;

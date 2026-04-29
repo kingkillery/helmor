@@ -24,6 +24,11 @@
 
 [**Download for macOS** →](https://github.com/dohooo/helmor/releases)
 
+[**Download for Windows** →](https://github.com/dohooo/helmor/releases)
+
+- macOS: download the latest `.dmg` for Apple Silicon or Intel from Releases.
+- Windows: download the latest Windows installer from Releases, then run the `.msi` or `.exe` installer.
+
 ## Contributing
 
 Open Helmor, Import Helmor, Ask Helmor:

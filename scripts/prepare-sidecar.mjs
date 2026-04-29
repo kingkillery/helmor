@@ -36,6 +36,9 @@ function run(cmd, cwd) {
 // this binary during bundling, but codesign preserves the entitlements blob
 // unless --entitlements is passed again with a different plist.
 function signSidecarWithEntitlements(path) {
+	if (process.platform !== "darwin") {
+		return;
+	}
 	const identity = process.env.APPLE_SIGNING_IDENTITY?.trim();
 	if (!identity) {
 		console.log(
@@ -86,6 +89,14 @@ function detectTargetTriple() {
 	return output;
 }
 
+function executableName(baseName) {
+	return process.platform === "win32" ? `${baseName}.exe` : baseName;
+}
+
+function stagedExternalBinPath(dir, baseName, triple) {
+	return resolve(dir, `${baseName}-${triple}${process.platform === "win32" ? ".exe" : ""}`);
+}
+
 function main() {
 	// 1. Install sidecar deps (idempotent; fast when lockfile matches).
 	run("bun install --frozen-lockfile", sidecarDir);
@@ -94,14 +105,13 @@ function main() {
 	run("bun run build", sidecarDir);
 
 	const triple = detectTargetTriple();
-	const sidecarSource = resolve(sidecarDir, "dist", "helmor-sidecar");
-	const sidecarDestination = resolve(
-		sidecarDir,
-		"dist",
-		`helmor-sidecar-${triple}`,
+	const sidecarSource = resolve(sidecarDir, "dist", executableName("helmor-sidecar"));
+	const sidecarDestination = stagedExternalBinPath(
+		resolve(sidecarDir, "dist"),
+		"helmor-sidecar",
+		triple,
 	);
-	const cliBinaryName =
-		process.platform === "win32" ? "helmor-cli.exe" : "helmor-cli";
+	const cliBinaryName = executableName("helmor-cli");
 	const cliSource = resolve(
 		srcTauriDir,
 		"target",
@@ -109,7 +119,11 @@ function main() {
 		"release",
 		cliBinaryName,
 	);
-	const cliDestination = resolve(bundledBinDir, `helmor-cli-${triple}`);
+	const cliDestination = stagedExternalBinPath(
+		bundledBinDir,
+		"helmor-cli",
+		triple,
+	);
 
 	if (!existsSync(sidecarSource)) {
 		throw new Error(

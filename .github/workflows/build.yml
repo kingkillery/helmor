@@ -1,8 +1,8 @@
 name: Build
 
-# macOS-only frontend + storybook build verification. Full Tauri Windows/
-# Linux/macOS bundles are produced by publish.yml on tag push; this
-# workflow just ensures the frontend still compiles under Vite.
+# Frontend + Storybook build verification on the primary shipping platforms.
+# Full Tauri bundles are produced by publish.yml on tag push; this workflow
+# just ensures the web app still compiles cleanly on macOS and Windows.
 
 on:
   pull_request:
@@ -24,8 +24,16 @@ env:
 jobs:
   app-build:
     name: App Build
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs-on: macos-latest
+            platform-name: macOS
+          - runs-on: windows-latest
+            platform-name: Windows
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -38,8 +46,16 @@ jobs:
 
   storybook-build:
     name: Storybook Build
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs-on: macos-latest
+            platform-name: macOS
+          - runs-on: windows-latest
+            platform-name: Windows
     steps:
       - name: Checkout
         uses: actions/checkout@v6

@@ -82,6 +82,11 @@ pub fn generated_images_dir() -> Result<PathBuf> {
 /// Returns the Conductor source database path for import.
 /// This is the real Conductor database on the local machine.
 pub fn conductor_source_db_path() -> Option<PathBuf> {
+    #[cfg(not(target_os = "macos"))]
+    {
+        return None;
+    }
+
     let home = dirs_home()?;
     let path = home.join("Library/Application Support/com.conductor.app/conductor.db");
     if path.is_file() {
@@ -142,7 +147,9 @@ fn resolve_data_dir() -> Result<PathBuf> {
 }
 
 fn dirs_home() -> Option<PathBuf> {
-    std::env::var_os("HOME").map(PathBuf::from)
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(PathBuf::from)
 }
 
 /// Ensure all required subdirectories exist.

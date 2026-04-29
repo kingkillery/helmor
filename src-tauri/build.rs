@@ -41,20 +41,27 @@ fn ensure_external_bin_placeholders() {
     let manifest_dir =
         PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR should be set"));
     ensure_executable_placeholder(
-        manifest_dir
-            .join("target")
-            .join("bundled")
-            .join(format!("helmor-cli-{target}")),
+        external_bin_path(
+            manifest_dir.join("target").join("bundled"),
+            "helmor-cli",
+            &target,
+        ),
     );
 
     if let Some(repo_root) = manifest_dir.parent() {
         ensure_executable_placeholder(
-            repo_root
-                .join("sidecar")
-                .join("dist")
-                .join(format!("helmor-sidecar-{target}")),
+            external_bin_path(repo_root.join("sidecar").join("dist"), "helmor-sidecar", &target),
         );
     }
+}
+
+fn external_bin_path(dir: PathBuf, base_name: &str, target: &str) -> PathBuf {
+    let file_name = if cfg!(windows) {
+        format!("{base_name}-{target}.exe")
+    } else {
+        format!("{base_name}-{target}")
+    };
+    dir.join(file_name)
 }
 
 fn ensure_executable_placeholder(path: PathBuf) {
@@ -65,7 +72,12 @@ fn ensure_executable_placeholder(path: PathBuf) {
     if let Some(parent) = path.parent() {
         let _ = fs::create_dir_all(parent);
     }
-    let _ = fs::write(&path, "#!/bin/sh\nexit 0\n");
+    #[cfg(windows)]
+    let placeholder = "@echo off\r\nexit /b 0\r\n";
+    #[cfg(not(windows))]
+    let placeholder = "#!/bin/sh\nexit 0\n";
+
+    let _ = fs::write(&path, placeholder);
 
     #[cfg(unix)]
     {
