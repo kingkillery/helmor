@@ -89,14 +89,18 @@ function detectTargetTriple() {
 	return output;
 }
 
-function executableName(baseName) {
-	return process.platform === "win32" ? `${baseName}.exe` : baseName;
+function targetIsWindows(triple) {
+	return triple.includes("windows");
+}
+
+function executableName(baseName, triple) {
+	return targetIsWindows(triple) ? `${baseName}.exe` : baseName;
 }
 
 function stagedExternalBinPath(dir, baseName, triple) {
 	return resolve(
 		dir,
-		`${baseName}-${triple}${process.platform === "win32" ? ".exe" : ""}`,
+		`${baseName}-${triple}${targetIsWindows(triple) ? ".exe" : ""}`,
 	);
 }
 
@@ -111,14 +115,14 @@ function main() {
 	const sidecarSource = resolve(
 		sidecarDir,
 		"dist",
-		executableName("helmor-sidecar"),
+		executableName("helmor-sidecar", triple),
 	);
 	const sidecarDestination = stagedExternalBinPath(
 		resolve(sidecarDir, "dist"),
 		"helmor-sidecar",
 		triple,
 	);
-	const cliBinaryName = executableName("helmor-cli");
+	const cliBinaryName = executableName("helmor-cli", triple);
 	const cliSource = resolve(
 		srcTauriDir,
 		"target",

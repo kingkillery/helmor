@@ -153,14 +153,14 @@ jobs:
         env:
           TAURI_TARGET_TRIPLE: ${{ matrix.target-triple }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_ID: ${{ matrix.runs-on == 'macos-26' && secrets.APPLE_ID || '' }}
-          APPLE_PASSWORD: ${{ matrix.runs-on == 'macos-26' && secrets.APPLE_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ matrix.runs-on == 'macos-26' && secrets.APPLE_TEAM_ID || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ matrix.runs-on == 'macos-26' && secrets.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_ID: ${{ (startsWith(matrix.target-triple, 'aarch64-apple') || startsWith(matrix.target-triple, 'x86_64-apple')) && secrets.APPLE_ID || '' }}
+          APPLE_PASSWORD: ${{ (startsWith(matrix.target-triple, 'aarch64-apple') || startsWith(matrix.target-triple, 'x86_64-apple')) && secrets.APPLE_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ (startsWith(matrix.target-triple, 'aarch64-apple') || startsWith(matrix.target-triple, 'x86_64-apple')) && secrets.APPLE_TEAM_ID || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ (startsWith(matrix.target-triple, 'aarch64-apple') || startsWith(matrix.target-triple, 'x86_64-apple')) && secrets.APPLE_SIGNING_IDENTITY || '' }}
           APPLE_KEYCHAIN_PATH: ${{ steps.signing.outputs.APPLE_KEYCHAIN_PATH }}
           APPLE_KEYCHAIN_PASSWORD: ${{ steps.signing.outputs.APPLE_KEYCHAIN_PASSWORD }}
-          APPLE_CERTIFICATE: ${{ matrix.runs-on == 'macos-26' && secrets.APPLE_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.runs-on == 'macos-26' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_CERTIFICATE: ${{ (startsWith(matrix.target-triple, 'aarch64-apple') || startsWith(matrix.target-triple, 'x86_64-apple')) && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ (startsWith(matrix.target-triple, 'aarch64-apple') || startsWith(matrix.target-triple, 'x86_64-apple')) && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           HELMOR_UPDATER_PUBKEY: ${{ secrets.HELMOR_UPDATER_PUBKEY }}

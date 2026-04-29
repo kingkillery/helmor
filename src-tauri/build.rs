@@ -56,7 +56,7 @@ fn ensure_external_bin_placeholders() {
 }
 
 fn external_bin_path(dir: PathBuf, base_name: &str, target: &str) -> PathBuf {
-    let file_name = if cfg!(windows) {
+    let file_name = if target.contains("windows") {
         format!("{base_name}-{target}.exe")
     } else {
         format!("{base_name}-{target}")

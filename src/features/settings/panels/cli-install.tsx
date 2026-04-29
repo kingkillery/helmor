@@ -14,7 +14,9 @@ export function CliInstallPanel() {
 	const [error, setError] = useState<string | null>(null);
 	const platform =
 		status?.platform ??
-		(status?.installPath?.toLowerCase().endsWith(".cmd") ? "windows" : "macos");
+		(status?.installPath?.toLowerCase().endsWith(".cmd")
+			? "windows"
+			: "unknown");
 	const commandName =
 		status?.buildMode === "development" ? "helmor-dev" : "helmor";
 	const buildLabel = status?.buildMode === "development" ? "Debug" : "Release";

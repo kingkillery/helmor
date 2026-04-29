@@ -149,6 +149,21 @@ fn resolve_data_dir() -> Result<PathBuf> {
     Ok(home.join(default_data_dir_name()))
 }
 
+#[cfg(target_os = "windows")]
+fn dirs_home() -> Option<PathBuf> {
+    std::env::var_os("USERPROFILE")
+        .or_else(|| {
+            let drive = std::env::var_os("HOMEDRIVE")?;
+            let path = std::env::var_os("HOMEPATH")?;
+            let mut home = PathBuf::from(drive);
+            home.push(path);
+            Some(home.into_os_string())
+        })
+        .or_else(|| std::env::var_os("HOME"))
+        .map(PathBuf::from)
+}
+
+#[cfg(not(target_os = "windows"))]
 fn dirs_home() -> Option<PathBuf> {
     std::env::var_os("HOME")
         .or_else(|| std::env::var_os("USERPROFILE"))

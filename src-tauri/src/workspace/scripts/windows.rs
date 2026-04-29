@@ -100,7 +100,10 @@ impl ScriptProcessManager {
         Ok(true)
     }
 
-    pub fn resize(&self, key: &ProcessKey, _cols: u16, _rows: u16) -> Result<bool> {
+    /// Windows pipe-backed terminals do not expose PTY resize support yet, so
+    /// this is currently a no-op that only reports whether the session exists.
+    pub fn resize(&self, key: &ProcessKey, cols: u16, rows: u16) -> Result<bool> {
+        let _ = (cols, rows);
         let map = self.processes.lock().expect("process map poisoned");
         Ok(map.contains_key(key))
     }
@@ -336,9 +339,14 @@ fn spawn_reader<R: Read + Send + 'static>(
 }
 
 fn kill_process_tree(pid: u32) {
-    let _ = Command::new("taskkill")
+    match Command::new("taskkill")
         .args(["/PID", &pid.to_string(), "/T", "/F"])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .status();
+        .status()
+    {
+        Ok(status) if status.success() => {}
+        Ok(status) => tracing::warn!(pid, ?status, "Windows taskkill failed for terminal process"),
+        Err(error) => tracing::warn!(pid, %error, "Failed to launch taskkill for terminal process"),
+    }
 }
