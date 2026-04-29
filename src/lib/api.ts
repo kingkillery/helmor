@@ -719,6 +719,7 @@ export type CliStatus = {
 	installPath: string | null;
 	buildMode: string;
 	installState: "missing" | "managed" | "stale";
+	platform?: "macos" | "windows" | "linux" | "unknown";
 };
 
 export async function getCliStatus(): Promise<CliStatus> {

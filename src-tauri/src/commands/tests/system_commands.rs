@@ -12,12 +12,14 @@ fn cli_status_serializes_camel_case() {
         install_path: Some("/usr/local/bin/helmor-dev".into()),
         build_mode: "development".into(),
         install_state: CliInstallState::Managed,
+        platform: "macos",
     };
     let value = serde_json::to_value(&status).unwrap();
     assert!(value.get("installed").is_some());
     assert_eq!(value["installPath"], "/usr/local/bin/helmor-dev");
     assert_eq!(value["buildMode"], "development");
     assert_eq!(value["installState"], "managed");
+    assert_eq!(value["platform"], "macos");
     assert!(value.get("install_path").is_none());
 }
 
@@ -28,11 +30,13 @@ fn cli_status_missing_install_path_is_null() {
         install_path: None,
         build_mode: "development".into(),
         install_state: CliInstallState::Missing,
+        platform: "windows",
     };
     let value = serde_json::to_value(&status).unwrap();
     assert!(value["installPath"].is_null());
     assert_eq!(value["installed"], false);
     assert_eq!(value["installState"], "missing");
+    assert_eq!(value["platform"], "windows");
 }
 
 #[test]

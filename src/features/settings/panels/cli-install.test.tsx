@@ -35,6 +35,7 @@ describe("CliInstallPanel", () => {
 			installPath: "/usr/local/bin/helmor-dev",
 			buildMode: "development",
 			installState: "managed",
+			platform: "macos",
 		});
 
 		render(<CliInstallPanel />);
@@ -56,12 +57,14 @@ describe("CliInstallPanel", () => {
 			installPath: "/usr/local/bin/helmor",
 			buildMode: "release",
 			installState: "stale",
+			platform: "macos",
 		});
 		apiMocks.installCli.mockResolvedValue({
 			installed: true,
 			installPath: "/usr/local/bin/helmor",
 			buildMode: "release",
 			installState: "managed",
+			platform: "macos",
 		});
 
 		render(<CliInstallPanel />);
@@ -80,5 +83,24 @@ describe("CliInstallPanel", () => {
 		await waitFor(() => {
 			expect(screen.getByText(/Installed at/)).toBeInTheDocument();
 		});
+	});
+
+	it("renders the Windows install hint", async () => {
+		apiMocks.getCliStatus.mockResolvedValue({
+			installed: false,
+			installPath: null,
+			buildMode: "release",
+			installState: "missing",
+			platform: "windows",
+		});
+
+		render(<CliInstallPanel />);
+
+		await waitFor(() => {
+			expect(screen.getByText(/Add that folder to your PATH once on Windows/i)).toBeInTheDocument();
+		});
+		expect(
+			screen.getByRole("button", { name: "Install to ~/.helmor/bin" }),
+		).toBeInTheDocument();
 	});
 });

@@ -55,6 +55,7 @@ pub struct CliStatus {
     pub install_path: Option<String>,
     pub build_mode: String,
     pub install_state: CliInstallState,
+    pub platform: &'static str,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -66,7 +67,17 @@ pub struct HelmorSkillsStatus {
     pub command: String,
 }
 
-/// Where Helmor installs its managed CLI entrypoint on macOS.
+/// Where Helmor installs its managed CLI entrypoint.
+#[cfg(windows)]
+fn cli_install_target() -> std::path::PathBuf {
+    home_dir()
+        .join(".helmor")
+        .join("bin")
+        .join(format!("{}.cmd", installed_cli_name()))
+}
+
+/// Where Helmor installs its managed CLI entrypoint.
+#[cfg(not(windows))]
 fn cli_install_target() -> std::path::PathBuf {
     std::path::PathBuf::from(format!("/usr/local/bin/{}", installed_cli_name()))
 }
@@ -81,7 +92,11 @@ fn installed_cli_name() -> &'static str {
 
 /// Name of the compiled CLI binary produced by `cargo build --bin helmor-cli`.
 fn cli_source_binary_name() -> &'static str {
-    "helmor-cli"
+    if cfg!(windows) {
+        "helmor-cli.exe"
+    } else {
+        "helmor-cli"
+    }
 }
 
 fn bundled_cli_binary(app_exe: &std::path::Path) -> anyhow::Result<std::path::PathBuf> {
@@ -91,11 +106,21 @@ fn bundled_cli_binary(app_exe: &std::path::Path) -> anyhow::Result<std::path::Pa
     Ok(target_dir.join(cli_source_binary_name()))
 }
 
+#[cfg(not(windows))]
 fn cli_install_remediation(cli_binary: &std::path::Path, install_path: &std::path::Path) -> String {
     format!(
         "sudo ln -sfn {} {}",
         shell_quote(cli_binary),
         shell_quote(install_path),
+    )
+}
+
+#[cfg(windows)]
+fn cli_install_remediation(cli_binary: &std::path::Path, install_path: &std::path::Path) -> String {
+    format!(
+        "Create {} with:\n{}",
+        install_path.display(),
+        cli_wrapper_contents(cli_binary),
     )
 }
 
@@ -107,6 +132,7 @@ fn shell_quote_arg(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\\''"))
 }
 
+#[cfg(not(windows))]
 fn classify_cli_install(
     install_path: &std::path::Path,
     bundled_cli: &std::path::Path,
@@ -145,6 +171,14 @@ fn classify_cli_install(
     }
 }
 
+#[cfg(windows)]
+fn classify_cli_install(
+    install_path: &std::path::Path,
+    bundled_cli: &std::path::Path,
+) -> CliInstallState {
+    classify_windows_cli_install(install_path, bundled_cli)
+}
+
 fn cli_status_for_paths(
     install_path: &std::path::Path,
     bundled_cli: &std::path::Path,
@@ -156,9 +190,11 @@ fn cli_status_for_paths(
             .then(|| install_path.display().to_string()),
         build_mode: crate::data_dir::data_mode_label().to_string(),
         install_state,
+        platform: cli_platform_label(),
     }
 }
 
+#[cfg(not(windows))]
 fn install_cli_symlink(
     bundled_cli: &std::path::Path,
     install_path: &std::path::Path,
@@ -244,6 +280,81 @@ fn try_install_symlink_unprivileged(
     {
         let _ = bundled_cli;
         anyhow::bail!("CLI installation via symlink is only supported on Unix.")
+    }
+}
+
+#[cfg(windows)]
+fn install_cli_symlink(
+    bundled_cli: &std::path::Path,
+    install_path: &std::path::Path,
+) -> anyhow::Result<()> {
+    install_cli_wrapper(bundled_cli, install_path)
+}
+
+#[cfg(windows)]
+fn install_cli_wrapper(
+    bundled_cli: &std::path::Path,
+    install_path: &std::path::Path,
+) -> anyhow::Result<()> {
+    if !bundled_cli.is_file() {
+        anyhow::bail!(
+            "CLI binary not found at {}. Build the bundled CLI first.",
+            bundled_cli.display()
+        );
+    }
+
+    if let Some(parent) = install_path.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to prepare install directory {}", parent.display()))?;
+    }
+
+    std::fs::write(install_path, cli_wrapper_contents(bundled_cli)).with_context(|| {
+        format!(
+            "Failed to write managed CLI launcher to {}",
+            install_path.display()
+        )
+    })?;
+
+    Ok(())
+}
+
+#[cfg(windows)]
+fn classify_windows_cli_install(
+    install_path: &std::path::Path,
+    bundled_cli: &std::path::Path,
+) -> CliInstallState {
+    let contents = match std::fs::read_to_string(install_path) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return CliInstallState::Missing;
+        }
+        Err(_) => return CliInstallState::Stale,
+    };
+
+    if contents == cli_wrapper_contents(bundled_cli) {
+        CliInstallState::Managed
+    } else {
+        CliInstallState::Stale
+    }
+}
+
+#[cfg(windows)]
+fn cli_wrapper_contents(cli_binary: &std::path::Path) -> String {
+    format!(
+        "@echo off\r\nREM HELMOR_MANAGED_CLI\r\n\"{}\" %*\r\n",
+        cli_binary.display()
+    )
+}
+
+fn cli_platform_label() -> &'static str {
+    if cfg!(windows) {
+        "windows"
+    } else if cfg!(target_os = "macos") {
+        "macos"
+    } else if cfg!(target_os = "linux") {
+        "linux"
+    } else {
+        "unknown"
     }
 }
 

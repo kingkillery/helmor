@@ -81,12 +81,8 @@ pub fn generated_images_dir() -> Result<PathBuf> {
 
 /// Returns the Conductor source database path for import.
 /// This is the real Conductor database on the local machine.
+#[cfg(target_os = "macos")]
 pub fn conductor_source_db_path() -> Option<PathBuf> {
-    #[cfg(not(target_os = "macos"))]
-    {
-        return None;
-    }
-
     let home = dirs_home()?;
     let path = home.join("Library/Application Support/com.conductor.app/conductor.db");
     if path.is_file() {
@@ -94,6 +90,13 @@ pub fn conductor_source_db_path() -> Option<PathBuf> {
     } else {
         None
     }
+}
+
+/// Returns the Conductor source database path for import.
+/// This is the real Conductor database on the local machine.
+#[cfg(not(target_os = "macos"))]
+pub fn conductor_source_db_path() -> Option<PathBuf> {
+    None
 }
 
 /// Returns the Conductor filesystem root directory.

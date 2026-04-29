@@ -12,13 +12,20 @@ export function CliInstallPanel() {
 	const [status, setStatus] = useState<CliStatus | null>(null);
 	const [installing, setInstalling] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const platform =
+		status?.platform ??
+		(status?.installPath?.toLowerCase().endsWith(".cmd") ? "windows" : "macos");
 	const commandName =
 		status?.buildMode === "development" ? "helmor-dev" : "helmor";
 	const buildLabel = status?.buildMode === "development" ? "Debug" : "Release";
 	const isManaged = status?.installState === "managed";
 	const isStale = status?.installState === "stale";
+	const installLocationLabel =
+		platform === "windows"
+			? "Install to ~/.helmor/bin"
+			: "Install to /usr/local/bin";
 	const buttonLabel =
-		isManaged || isStale ? "Reinstall" : "Install to /usr/local/bin";
+		isManaged || isStale ? "Reinstall" : installLocationLabel;
 
 	useEffect(() => {
 		void getCliStatus().then(setStatus).catch(setError);
@@ -56,8 +63,18 @@ export function CliInstallPanel() {
 						<code className="rounded bg-muted px-1 py-0.5 text-[11px]">
 							{commandName}
 						</code>{" "}
-						command as a symlink to this app&apos;s bundled CLI so terminal
-						usage tracks desktop updates automatically. {buildLabel} build.
+						command as a managed launcher to this app&apos;s bundled CLI so
+						terminal usage tracks desktop updates automatically. {buildLabel}{" "}
+						build.
+						{platform === "windows" ? (
+							<SettingsNotice tone="warn">
+								Helmor installs the launcher in{" "}
+								<code className="rounded bg-muted px-1.5 py-0.5 text-[11px]">
+									~/.helmor/bin
+								</code>
+								. Add that folder to your PATH once on Windows.
+							</SettingsNotice>
+						) : null}
 						{isManaged ? (
 							<SettingsNotice tone="ok">
 								Installed at{" "}
