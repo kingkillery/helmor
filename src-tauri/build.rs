@@ -40,18 +40,18 @@ fn ensure_external_bin_placeholders() {
 
     let manifest_dir =
         PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR should be set"));
-    ensure_executable_placeholder(
-        external_bin_path(
-            manifest_dir.join("target").join("bundled"),
-            "helmor-cli",
-            &target,
-        ),
-    );
+    ensure_executable_placeholder(external_bin_path(
+        manifest_dir.join("target").join("bundled"),
+        "helmor-cli",
+        &target,
+    ));
 
     if let Some(repo_root) = manifest_dir.parent() {
-        ensure_executable_placeholder(
-            external_bin_path(repo_root.join("sidecar").join("dist"), "helmor-sidecar", &target),
-        );
+        ensure_executable_placeholder(external_bin_path(
+            repo_root.join("sidecar").join("dist"),
+            "helmor-sidecar",
+            &target,
+        ));
     }
 }
 

@@ -94,7 +94,10 @@ function executableName(baseName) {
 }
 
 function stagedExternalBinPath(dir, baseName, triple) {
-	return resolve(dir, `${baseName}-${triple}${process.platform === "win32" ? ".exe" : ""}`);
+	return resolve(
+		dir,
+		`${baseName}-${triple}${process.platform === "win32" ? ".exe" : ""}`,
+	);
 }
 
 function main() {
@@ -105,7 +108,11 @@ function main() {
 	run("bun run build", sidecarDir);
 
 	const triple = detectTargetTriple();
-	const sidecarSource = resolve(sidecarDir, "dist", executableName("helmor-sidecar"));
+	const sidecarSource = resolve(
+		sidecarDir,
+		"dist",
+		executableName("helmor-sidecar"),
+	);
 	const sidecarDestination = stagedExternalBinPath(
 		resolve(sidecarDir, "dist"),
 		"helmor-sidecar",

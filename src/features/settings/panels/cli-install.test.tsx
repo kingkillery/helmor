@@ -97,7 +97,9 @@ describe("CliInstallPanel", () => {
 		render(<CliInstallPanel />);
 
 		await waitFor(() => {
-			expect(screen.getByText(/Add that folder to your PATH once on Windows/i)).toBeInTheDocument();
+			expect(
+				screen.getByText(/Add that folder to your PATH once on Windows/i),
+			).toBeInTheDocument();
 		});
 		expect(
 			screen.getByRole("button", { name: "Install to ~/.helmor/bin" }),

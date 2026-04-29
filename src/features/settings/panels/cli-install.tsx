@@ -24,8 +24,7 @@ export function CliInstallPanel() {
 		platform === "windows"
 			? "Install to ~/.helmor/bin"
 			: "Install to /usr/local/bin";
-	const buttonLabel =
-		isManaged || isStale ? "Reinstall" : installLocationLabel;
+	const buttonLabel = isManaged || isStale ? "Reinstall" : installLocationLabel;
 
 	useEffect(() => {
 		void getCliStatus().then(setStatus).catch(setError);
